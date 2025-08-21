@@ -23,38 +23,38 @@ def create_admin_login_page(root, go_back, login_callback):
     # Heading
     heading_lb = tk.Label(frame, text="Admin Portal Login",
                           font=('bold', 18), bg=bg_color, fg='white')
-    heading_lb.place(x=0, y=0, width=550)
+    heading_lb.place(x=0, y=0, width=1200)
 
     # Back button
     back_btn = tk.Button(frame, text="←", font=('bold', 20), bd=0,
                          fg=bg_color, command=go_back)
-    back_btn.place(x=5, y=40)
+    back_btn.place(x=12, y=40)
 
     # Admin icon
     admin_icon_lb = tk.Label(frame, image=admin_login_icon, bd=0)
-    admin_icon_lb.place(x=220, y=45)
+    admin_icon_lb.place(x=550, y=65)
 
     # Admin ID
     id_number_lb = tk.Label(frame, text="Admin ID Number:", font=('bold', 15),
                             fg=bg_color, bd=0)
-    id_number_lb.place(x=150, y=150)
+    id_number_lb.place(x=480, y=180)
     id_number_ent = tk.Entry(frame, font=('bold', 15), justify=tk.CENTER,
                              highlightcolor=bg_color, highlightbackground='gray', highlightthickness=2)
-    id_number_ent.place(x=150, y=185)
+    id_number_ent.place(x=480, y=215)
 
     # Password
     password_lb = tk.Label(frame, text="Password:", font=('bold', 15),
                            fg=bg_color, bd=0)
-    password_lb.place(x=150, y=245)
+    password_lb.place(x=480, y=255)
     password_ent = tk.Entry(frame, font=('bold', 15), justify=tk.CENTER,
                             highlightcolor=bg_color, highlightbackground='gray',
                             highlightthickness=2, show="*")
-    password_ent.place(x=150, y=280)
+    password_ent.place(x=480, y=290)
 
     # Show/hide password button
     show_hide_btn = tk.Button(frame, image=locked_icon, bd=0,
                               command=show_hide_password)
-    show_hide_btn.place(x=390, y=278)
+    show_hide_btn.place(x=720, y=290)
 
     # Login button (calls login_callback from main.py)
     login_btn = tk.Button(
@@ -65,18 +65,12 @@ def create_admin_login_page(root, go_back, login_callback):
         fg='white',
         command=lambda: login_callback(id_number_ent, password_ent)
     )
-    login_btn.place(x=190, y=340, width=140, height=35)
-
-    # Forgot password
-    forget_password_btn = tk.Button(frame, text="Forgot Password?",
-                                    bd=0, fg=bg_color)
-    forget_password_btn.place(x=215, y=390)
+    login_btn.place(x=520, y=350, width=140, height=35)
 
     # Configure frame size
     frame.pack_propagate(False)
-    frame.configure(width=550, height=570)
-    frame.place(relx=0.5, rely=0.5, anchor="center")
-    
+    frame.configure(width=1200, height=720)
+
     # Keep image references
     frame.images = [admin_login_icon, locked_icon, unlocked_icon]
 

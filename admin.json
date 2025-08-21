@@ -35,6 +35,24 @@
             "gender": "Male",
             "password": "",
             "course_id": 1
+        },
+        {
+            "id": "19",
+            "first_name": "Onkar",
+            "last_name": "Bansode",
+            "gender": "Male",
+            "Course": "CO",
+            "email": "onkarbansode123@gmail.com",
+            "password": "onkar123"
+        },
+        {
+            "id": "18",
+            "first_name": "Atharva",
+            "last_name": "Satpute",
+            "gender": "Male",
+            "Course": "CO",
+            "email": "atharva123@gmail.com",
+            "password": "atharva123"
         }
     ],
     "courses": [

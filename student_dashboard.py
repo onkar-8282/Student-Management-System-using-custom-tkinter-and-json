@@ -26,18 +26,19 @@ def save_json(data):
 
 
 # ---------------- Base Page ----------------
+def toast(msg, kind="info"):
+    if kind == "info":
+        messagebox.showinfo("Info", msg)
+    elif kind == "error":
+        messagebox.showerror("Error", msg)
+    else:
+        messagebox.showwarning("Notice", msg)
+
+
 class BasePage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color="white")
         self.app = app
-
-    def toast(self, msg, kind="info"):
-        if kind == "info":
-            messagebox.showinfo("Info", msg)
-        elif kind == "error":
-            messagebox.showerror("Error", msg)
-        else:
-            messagebox.showwarning("Notice", msg)
 
 
 # ---------------- Pages ----------------
@@ -45,9 +46,9 @@ class DashboardPage(BasePage):
     def __init__(self, parent, app):
         super().__init__(parent, app)
         ctk.CTkLabel(self, text="Dashboard",
-                     font=ctk.CTkFont(size=18, weight="bold"),
+                     font=ctk.CTkFont(size=30, weight="bold"),
                      text_color="black").pack(anchor="w", padx=16, pady=12)
-        self.details_label = ctk.CTkLabel(self, font=ctk.CTkFont(size=14),
+        self.details_label = ctk.CTkLabel(self, font=ctk.CTkFont(size=20),
                                           text_color="black", justify="left")
         self.details_label.pack(anchor="w", padx=16, pady=8)
         self.refresh()
@@ -89,7 +90,7 @@ class LeavePage(BasePage):
     def submit(self):
         reason = self.txt.get("1.0", "end").strip()
         if not reason:
-            return self.toast("Enter reason", "error")
+            return toast("Enter reason", "error")
 
         existing_ids = [lv["id"] for lv in self.app.data.get("leave_student", [])]
         new_id = max(existing_ids or [0]) + 1
@@ -104,7 +105,8 @@ class LeavePage(BasePage):
         save_json(self.app.data)
         self.txt.delete("1.0", "end")
         self.refresh()
-        self.toast("Leave applied")
+        toast("Leave applied")
+        return None
 
     def refresh(self):
         self.tree.delete(*self.tree.get_children())
@@ -150,7 +152,7 @@ class ProfilePage(BasePage):
         s["last_name"] = self.ln.get()
         s["email"] = self.email.get()
         save_json(self.app.data)
-        self.toast("Profile updated")
+        toast("Profile updated")
         self.refresh()
 
 
@@ -274,7 +276,10 @@ class StudentApp(ctk.CTk):
 
 # ---------------- Testing ----------------
 if __name__ == "__main__":
-    ctk.set_appearance_mode("light")   # or "dark"
+    ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
-    app = StudentApp(student_id=1)
-    app.mainloop()
+    try:
+        app = StudentApp(student_id=1)
+        app.mainloop()
+    except Exception as e:
+        print("Application closed:", e)
