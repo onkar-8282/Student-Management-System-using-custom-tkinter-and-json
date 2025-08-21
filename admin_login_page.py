@@ -75,7 +75,8 @@ def create_admin_login_page(root, go_back, login_callback):
     # Configure frame size
     frame.pack_propagate(False)
     frame.configure(width=550, height=570)
-
+    frame.place(relx=0.5, rely=0.5, anchor="center")
+    
     # Keep image references
     frame.images = [admin_login_icon, locked_icon, unlocked_icon]
 

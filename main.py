@@ -1,4 +1,4 @@
-import customtkinter as ctk
+import tkinter as tk
 from tkinter import messagebox
 from welcome_page import create_welcome_page
 from student_login_page import create_student_login_page
@@ -27,17 +27,17 @@ def launch_admin_dashboard():
 
 
 # ------------------ MAIN WINDOW ------------------
-ctk.set_appearance_mode("light")   # can also be "dark"
-ctk.set_default_color_theme("blue")  # blue / green / dark-blue
-
-root = ctk.CTk()
-root.geometry("1440x800")
+root = tk.Tk()
+root.geometry('1200x720')
 root.title("Student Management System")
 root.resizable(False, False)
 
-container = ctk.CTkFrame(root, corner_radius=0)
+container = tk.Frame(root)
 container.pack(fill="both", expand=True)
 
+# Make sure container expands and centers frames
+container.grid_rowconfigure(0, weight=1)
+container.grid_columnconfigure(0, weight=1)
 
 # ------------------ Pages ------------------
 welcome_page_fm = create_welcome_page(
@@ -86,7 +86,6 @@ admin_login_page_fm = create_admin_login_page(
     login_callback=admin_login_action
 )
 
-
 # ------------------ Register all frames ------------------
 for frame in (
     welcome_page_fm,
@@ -94,7 +93,7 @@ for frame in (
     admin_login_page_fm,
     add_student_page_fm,
 ):
-    frame.grid(row=10, column=5, sticky="nsew")
+    frame.grid(row=0, column=0, sticky="nsew")
 
 # ------------------ Start ------------------
 show_frame(welcome_page_fm)

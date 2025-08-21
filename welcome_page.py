@@ -1,4 +1,5 @@
 import tkinter as tk
+import customtkinter as ctk
 
 def create_welcome_page(root, show_student_login, show_admin_login, show_sign_up):
     bg_color = "#273b7a"
@@ -40,7 +41,7 @@ def create_welcome_page(root, show_student_login, show_admin_login, show_sign_up
 
     frame.pack_propagate(False)
     frame.configure(width=550, height=570)
-
+    frame.place( x = 25 , y = 59)
     # Keep image references
     frame.images = [student_login_icon, admin_login_icon, add_student_icon]
 

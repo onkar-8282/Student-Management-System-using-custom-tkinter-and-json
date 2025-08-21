@@ -183,7 +183,7 @@ class StudentApp(ctk.CTk):
     def __init__(self, student_id):
         super().__init__()
         self.title("Student Management System - Student")
-        self.geometry("1200x700")
+        self.geometry("1200x720")
         self.data = load_json()
 
         # Find student by ID
@@ -201,17 +201,22 @@ class StudentApp(ctk.CTk):
         self.student = student
 
         # Sidebar
-        self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
+        self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0 , fg_color="#273b7a")
         self.sidebar.pack(side="left", fill="y")
         ctk.CTkLabel(self.sidebar, text="Menu",
                      font=ctk.CTkFont(size=16, weight="bold"),
                      text_color="white").pack(padx=12, pady=12)
+
+        # keep track of sidebar buttons
+        self.buttons = {}
+        self.active_page = None
 
         self._btn("Dashboard", "dashboard")
         self._btn("Leaves", "leaves")
         self._btn("Profile", "profile")
         self._btn("Notifications", "notifications")
 
+        # Logout stays separate (always red)
         ctk.CTkButton(self.sidebar, text="Logout",
                       fg_color="red", text_color="white",
                       hover_color="#b30000", command=self.logout).pack(fill="x", padx=12, pady=20)
@@ -230,18 +235,31 @@ class StudentApp(ctk.CTk):
             p.pack_forget()
         self.show_page("dashboard")
 
+    # updated _btn
     def _btn(self, text, key):
-        ctk.CTkButton(self.sidebar, text=text, width=180,
-                      fg_color="blue", text_color="white",
-                      hover_color="#004080",
-                      command=lambda: self.show_page(key)).pack(padx=12, pady=4)
+        btn = ctk.CTkButton(self.sidebar, text=text, width=180,
+                            fg_color="#273b7a", text_color="white",
+                            hover_color="#1e2f5a", corner_radius=0,
+                            anchor="w", height=40,
+                            command=lambda: self.show_page(key))
+        btn.pack(padx=0, pady=2, fill="x")
+        self.buttons[key] = btn
 
+    # updated show_page with highlight
     def show_page(self, key):
         for p in self.pages.values():
             p.pack_forget()
         self.pages[key].pack(fill="both", expand=True)
         if hasattr(self.pages[key], "refresh"):
             self.pages[key].refresh()
+
+        # reset all buttons
+        for k, b in self.buttons.items():
+            b.configure(fg_color="#273b7a")
+        # highlight active
+        if key in self.buttons:
+            self.buttons[key].configure(fg_color="#1e2f5a")
+        self.active_page = key
 
     def logout(self):
         if messagebox.askyesno("Logout", "Are you sure you want to log out?"):
