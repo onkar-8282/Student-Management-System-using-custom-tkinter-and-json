@@ -1,131 +1,112 @@
 {
-    "students": [
-        {
-            "id": 2,
-            "first_name": "Tanmay",
-            "last_name": "Kanade",
-            "email": "tanmaykanade12@gmail.com",
-            "gender": "Male",
-            "password": "tanmay@123",
-            "course_id": 2
-        },
-        {
-            "id": 3,
-            "first_name": "Malhar",
-            "last_name": "Mhatre",
-            "email": "malhar212@gmail.com",
-            "gender": "Male",
-            "password": "",
-            "course_id": 2
-        },
-        {
-            "id": 4,
-            "first_name": "Shaksham",
-            "last_name": "shetty",
-            "email": "shaksham21@gmail.com",
-            "gender": "Male",
-            "password": "",
-            "course_id": 1
-        },
-        {
-            "id": 5,
-            "first_name": "Taha",
-            "last_name": "Shaikh",
-            "email": "taha2112@gmail.com",
-            "gender": "Male",
-            "password": "",
-            "course_id": 1
-        },
-        {
-            "id": "19",
-            "first_name": "Onkar",
-            "last_name": "Bansode",
-            "gender": "Male",
-            "Course": "CO",
-            "email": "onkarbansode123@gmail.com",
-            "password": "onkar123"
-        },
-        {
-            "id": "18",
-            "first_name": "Atharva",
-            "last_name": "Satpute",
-            "gender": "Male",
-            "Course": "CO",
-            "email": "atharva123@gmail.com",
-            "password": "atharva123"
-        }
-    ],
-    "courses": [
-        {
-            "id": 1,
-            "name": "CO"
-        },
-        {
-            "id": 2,
-            "name": "IF"
-        },
-        {
-            "id": 3,
-            "name": "EE"
-        },
-        {
-            "id": 4,
-            "name": "CE"
-        },
-        {
-            "id": 5,
-            "name": "ME"
-        },
-        {
-            "id": 6,
-            "name": "ET"
-        },
-        {
-            "id": 7,
-            "name": "AIML"
-        }
-    ],
-    "subjects": [
-        {
-            "id": 1,
-            "name": "OSY",
-            "course_id": 1
-        },
-        {
-            "id": 2,
-            "name": "osy",
-            "course_id": 2
-        }
-    ],
-    "attendance": [],
-    "feedback": [],
-    "leaves": [],
-    "notifications": [
-        {
-            "message": "Welcome to the Student Management System!",
-            "time": "2025-08-20 22:50:03"
-        }
-    ],
-    "admin": {
-        "first_name": "Onkar",
-        "last_name": "Bansode",
-        "password": "onkar@123"
+  "admin": {
+    "first_name": "Admin",
+    "last_name": "123",
+    "password": "admin@123"
+  },
+  "courses": [
+    {
+      "id": 1,
+      "name": "CO"
     },
-    "feedback_student": [],
-    "leave_student": [
-        {
-            "id": 1,
-            "student_id": 2,
-            "reason": "not will",
-            "status": 1
-        }
-    ],
-    "student": {
-        "id": 1,
-        "first_name": "",
-        "last_name": "",
-        "email": "",
-        "address": ""
+    {
+      "id": 2,
+      "name": "IF"
     },
-    "leave_staff": []
+    {
+      "id": 3,
+      "name": "EE"
+    },
+    {
+      "id": 4,
+      "name": "CE"
+    },
+    {
+      "id": 5,
+      "name": "ME"
+    },
+    {
+      "id": 6,
+      "name": "ET"
+    },
+    {
+      "id": 7,
+      "name": "AIML"
+    }
+  ],
+  "leave_student": [
+    {
+      "id": 1,
+      "student_id": 2,
+      "reason": "not will",
+      "status": 1
+    }
+  ],
+  "leaves": [],
+  "notifications": [
+    {
+      "message": "Welcome to the Student Management System!",
+      "time": "2025-08-20 22:50:03"
+    },
+    {
+      "message": "classes cancel",
+      "time": "2025-08-23 19:46:31"
+    }
+  ],
+  "students": [
+    {
+      "id": 2,
+      "first_name": "Tanmay",
+      "last_name": "Kanade",
+      "email": "tanmaykanade12@gmail.com",
+      "gender": "Male",
+      "password": "tanmay@123",
+      "course_id": 2
+    },
+    {
+      "id": 3,
+      "first_name": "Malhar",
+      "last_name": "Mhatre",
+      "email": "malhar212@gmail.com",
+      "gender": "Male",
+      "password": "",
+      "course_id": 2
+    },
+    {
+      "id": 4,
+      "first_name": "Shaksham",
+      "last_name": "shetty",
+      "email": "shaksham21@gmail.com",
+      "gender": "Male",
+      "password": "shetty789",
+      "course_id": 1
+    },
+    {
+      "id": 5,
+      "first_name": "Taha",
+      "last_name": "Shaikh",
+      "email": "taha2112@gmail.com",
+      "gender": "Male",
+      "password": "taha456",
+      "course_id": 1
+    },
+    {
+      "id": "19",
+      "first_name": "Onkar",
+      "last_name": "Bansode",
+      "gender": "Male",
+      "Course": "CO",
+      "email": "onkarbansode123@gmail.com",
+      "password": "onkar123"
+    },
+    {
+      "id": "18",
+      "first_name": "Atharva",
+      "last_name": "Satpute",
+      "gender": "Male",
+      "Course": "CO",
+      "email": "atharva123@gmail.com",
+      "password": "atharva123"
+    }
+  ]
 }

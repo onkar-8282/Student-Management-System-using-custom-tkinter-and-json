@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 import json, os
-
 FILE = "admin.json"
 
 
@@ -25,7 +24,7 @@ def save_json(data):
         json.dump(data, f, indent=4)
 
 
-# ---------------- Base Page ----------------
+# ---------------- Toast ----------------
 def toast(msg, kind="info"):
     if kind == "info":
         messagebox.showinfo("Info", msg)
@@ -35,6 +34,7 @@ def toast(msg, kind="info"):
         messagebox.showwarning("Notice", msg)
 
 
+# ---------------- Base Page ----------------
 class BasePage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color="white")
@@ -45,23 +45,33 @@ class BasePage(ctk.CTkFrame):
 class DashboardPage(BasePage):
     def __init__(self, parent, app):
         super().__init__(parent, app)
-        ctk.CTkLabel(self, text="Dashboard",
+
+        # Title with underline style
+        title = ctk.CTkLabel(self, text="📊 Dashboard",
                      font=ctk.CTkFont(size=30, weight="bold"),
-                     text_color="black").pack(anchor="w", padx=16, pady=12)
-        self.details_label = ctk.CTkLabel(self, font=ctk.CTkFont(size=20),
-                                          text_color="black", justify="left")
-        self.details_label.pack(anchor="w", padx=16, pady=8)
+                     text_color="#273b7a")
+        title.pack(anchor="w", padx=30, pady=(25, 5))
+
+        ctk.CTkFrame(self, fg_color="#273b7a", height=2).pack(fill="x", padx=30, pady=(0, 20))
+
+        # Card frame for info
+        self.card = ctk.CTkFrame(self, fg_color="#f1f3f6", corner_radius=20)
+        self.card.pack(fill="x", padx=40, pady=20)
+
+        self.details_label = ctk.CTkLabel(self.card, font=ctk.CTkFont(size=18),
+                                          text_color="#333", justify="left")
+        self.details_label.pack(anchor="w", padx=25, pady=25)
         self.refresh()
 
     def refresh(self):
         s = self.app.student
         details = f"""
-ID: {s.get("id", "N/A")}
-First Name: {s.get("first_name", "")}
-Last Name: {s.get("last_name", "")}
-Email: {s.get("email", "")}
-Gender: {s.get("gender", "")}
-Course: {self.app.get_course_name(s.get("course_id"))}
+🆔 ID: {s.get("id", "N/A")}
+👤 First Name: {s.get("first_name", "")}
+👤 Last Name: {s.get("last_name", "")}
+📧 Email: {s.get("email", "")}
+⚧ Gender: {s.get("gender", "")}
+📘 Course: {self.app.get_course_name(s.get("course_id"))}
 """
         self.details_label.configure(text=details)
 
@@ -69,22 +79,38 @@ Course: {self.app.get_course_name(s.get("course_id"))}
 class LeavePage(BasePage):
     def __init__(self, parent, app):
         super().__init__(parent, app)
-        ctk.CTkLabel(self, text="Apply Leave",
-                     font=ctk.CTkFont(size=18, weight="bold"),
-                     text_color="black").pack(anchor="w", padx=16, pady=12)
 
-        self.txt = ctk.CTkTextbox(self, height=100, width=500)
-        self.txt.pack(padx=16, pady=8)
+        ctk.CTkLabel(self, text="📝 Apply Leave",
+                     font=ctk.CTkFont(size=24, weight="bold"),
+                     text_color="#273b7a").pack(anchor="w", padx=30, pady=(25, 10))
 
-        ctk.CTkButton(self, text="Submit Leave", command=self.submit,
-                      fg_color="green", text_color="white").pack(padx=16, pady=8)
+        self.txt = ctk.CTkTextbox(self, height=100, width=650, corner_radius=12)
+        self.txt.pack(padx=30, pady=10)
 
-        # Treeview (still ttk)
-        self.tree = ttk.Treeview(self, columns=("id", "reason", "status"), show="headings", height=5)
-        for c, w in (("id", 50), ("reason", 260), ("status", 120)):
+        ctk.CTkButton(self, text="✅ Submit Leave", command=self.submit,
+                      fg_color="#28a745", text_color="white",
+                      hover_color="#218838", corner_radius=12,
+                      font=ctk.CTkFont(size=14, weight="bold")).pack(padx=30, pady=12)
+
+        # Treeview Styling
+        style = ttk.Style()
+        style.configure("mystyle.Treeview",
+                        background="#f8f9fa",
+                        foreground="black",
+                        rowheight=32,
+                        fieldbackground="#f8f9fa",
+                        font=("Segoe UI", 12))
+        style.configure("mystyle.Treeview.Heading", font=("Segoe UI", 13, "bold"))
+        style.map("mystyle.Treeview",
+                  background=[("selected", "#273b7a")],
+                  foreground=[("selected", "white")])
+
+        self.tree = ttk.Treeview(self, columns=("id", "reason", "status"),
+                                 show="headings", height=6, style="mystyle.Treeview")
+        for c, w in (("id", 70), ("reason", 340), ("status", 180)):
             self.tree.heading(c, text=c.title())
-            self.tree.column(c, width=w)
-        self.tree.pack(fill="both", expand=True, padx=16, pady=8)
+            self.tree.column(c, width=w, anchor="center")
+        self.tree.pack(fill="both", expand=True, padx=30, pady=15)
         self.refresh()
 
     def submit(self):
@@ -105,39 +131,42 @@ class LeavePage(BasePage):
         save_json(self.app.data)
         self.txt.delete("1.0", "end")
         self.refresh()
-        toast("Leave applied")
-        return None
+        toast("Leave applied ✅")
 
     def refresh(self):
         self.tree.delete(*self.tree.get_children())
         for lv in self.app.data.get("leave_student", []):
             if lv.get("student_id") != self.app.student["id"]:
                 continue
-            st = {0: "Pending", 1: "Approved", -1: "Rejected"}.get(lv.get("status"), "Pending")
+            st = {0: "⏳ Pending", 1: "✔ Approved", -1: "❌ Rejected"}.get(lv.get("status"), "Pending")
             self.tree.insert("", "end", values=(lv["id"], lv["reason"], st))
 
 
 class ProfilePage(BasePage):
     def __init__(self, parent, app):
         super().__init__(parent, app)
-        ctk.CTkLabel(self, text="View/Edit Profile",
-                     font=ctk.CTkFont(size=18, weight="bold"),
-                     text_color="black").grid(row=0, column=0, columnspan=2, padx=16, pady=12, sticky="w")
 
-        self.fn = ctk.CTkEntry(self, width=200)
-        self.ln = ctk.CTkEntry(self, width=200)
-        self.email = ctk.CTkEntry(self, width=200)
+        ctk.CTkLabel(self, text="👤 View/Edit Profile",
+                     font=ctk.CTkFont(size=24, weight="bold"),
+                     text_color="#273b7a").grid(row=0, column=0, columnspan=2, padx=30, pady=(25, 20), sticky="w")
+
+        self.fn = ctk.CTkEntry(self, width=280, corner_radius=12, placeholder_text="First Name")
+        self.ln = ctk.CTkEntry(self, width=280, corner_radius=12, placeholder_text="Last Name")
+        self.email = ctk.CTkEntry(self, width=280, corner_radius=12, placeholder_text="Email")
 
         labels = ["First Name:", "Last Name:", "Email:"]
         entries = [self.fn, self.ln, self.email]
 
         for i, (lbl, ent) in enumerate(zip(labels, entries), start=1):
-            ctk.CTkLabel(self, text=lbl, text_color="black").grid(row=i, column=0, sticky="w", padx=16, pady=4)
-            ent.grid(row=i, column=1, sticky="ew", padx=16, pady=4)
+            ctk.CTkLabel(self, text=lbl, text_color="#333",
+                         font=ctk.CTkFont(size=14)).grid(row=i, column=0, sticky="w", padx=30, pady=8)
+            ent.grid(row=i, column=1, sticky="ew", padx=20, pady=8)
 
         self.columnconfigure(1, weight=1)
-        ctk.CTkButton(self, text="Save Profile", command=self.save,
-                      fg_color="blue", text_color="white").grid(row=5, column=0, columnspan=2, pady=12)
+        ctk.CTkButton(self, text="💾 Save Profile", command=self.save,
+                      fg_color="#273b7a", text_color="white",
+                      hover_color="#1e2f5a", corner_radius=12,
+                      font=ctk.CTkFont(size=14, weight="bold")).grid(row=5, column=0, columnspan=2, pady=25)
         self.refresh()
 
     def refresh(self):
@@ -152,20 +181,21 @@ class ProfilePage(BasePage):
         s["last_name"] = self.ln.get()
         s["email"] = self.email.get()
         save_json(self.app.data)
-        toast("Profile updated")
+        toast("Profile updated ✅")
         self.refresh()
 
 
 class NotificationPage(BasePage):
     def __init__(self, parent, app):
         super().__init__(parent, app)
-        ctk.CTkLabel(self, text="Notifications",
-                     font=ctk.CTkFont(size=18, weight="bold"),
-                     text_color="black").pack(anchor="w", padx=16, pady=12)
 
-        self.txtbox = ctk.CTkTextbox(self, height=400, width=600)
+        ctk.CTkLabel(self, text="🔔 Notifications",
+                     font=ctk.CTkFont(size=24, weight="bold"),
+                     text_color="#273b7a").pack(anchor="w", padx=30, pady=(25, 15))
+
+        self.txtbox = ctk.CTkTextbox(self, height=450, width=750, corner_radius=15, font=("Segoe UI", 13))
         self.txtbox.configure(state="disabled")
-        self.txtbox.pack(fill="both", expand=True, padx=16, pady=12)
+        self.txtbox.pack(fill="both", expand=True, padx=30, pady=20)
         self.refresh()
 
     def refresh(self):
@@ -175,7 +205,7 @@ class NotificationPage(BasePage):
             recipients = n.get("student_id")
             if recipients is not None and recipients != self.app.student["id"]:
                 continue
-            msg = f"{n.get('time','')} - {n.get('message','')}\n"
+            msg = f"📅 {n.get('time','')}  ➜  {n.get('message','')}\n\n"
             self.txtbox.insert("end", msg)
         self.txtbox.configure(state="disabled")
 
@@ -184,7 +214,7 @@ class NotificationPage(BasePage):
 class StudentApp(ctk.CTk):
     def __init__(self, student_id):
         super().__init__()
-        self.title("Student Management System - Student")
+        self.title("🎓 Student Management System")
         self.geometry("1200x720")
         self.data = load_json()
 
@@ -202,14 +232,14 @@ class StudentApp(ctk.CTk):
 
         self.student = student
 
-        # Sidebar
-        self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0 , fg_color="#273b7a")
+        # Sidebar with gradient effect
+        self.sidebar = ctk.CTkFrame(self, width=230, corner_radius=0, fg_color="#273b7a")
         self.sidebar.pack(side="left", fill="y")
-        ctk.CTkLabel(self.sidebar, text="Menu",
-                     font=ctk.CTkFont(size=16, weight="bold"),
-                     text_color="white").pack(padx=12, pady=12)
 
-        # keep track of sidebar buttons
+        ctk.CTkLabel(self.sidebar, text="📌 Menu",
+                     font=ctk.CTkFont(size=18, weight="bold"),
+                     text_color="white").pack(padx=12, pady=25)
+
         self.buttons = {}
         self.active_page = None
 
@@ -218,10 +248,11 @@ class StudentApp(ctk.CTk):
         self._btn("Profile", "profile")
         self._btn("Notifications", "notifications")
 
-        # Logout stays separate (always red)
-        ctk.CTkButton(self.sidebar, text="Logout",
-                      fg_color="red", text_color="white",
-                      hover_color="#b30000", command=self.logout).pack(fill="x", padx=12, pady=20)
+        ctk.CTkButton(self.sidebar, text="🚪 Logout",
+                      fg_color="#dc3545", text_color="white",
+                      hover_color="#a71d2a", corner_radius=8,
+                      font=ctk.CTkFont(size=14, weight="bold"),
+                      command=self.logout).pack(fill="x", padx=20, pady=40)
 
         # Main pages
         self.main = ctk.CTkFrame(self, fg_color="white")
@@ -237,17 +268,16 @@ class StudentApp(ctk.CTk):
             p.pack_forget()
         self.show_page("dashboard")
 
-    # updated _btn
     def _btn(self, text, key):
-        btn = ctk.CTkButton(self.sidebar, text=text, width=180,
+        btn = ctk.CTkButton(self.sidebar, text=text, width=200,
                             fg_color="#273b7a", text_color="white",
-                            hover_color="#1e2f5a", corner_radius=0,
-                            anchor="w", height=40,
+                            hover_color="#1e2f5a", corner_radius=8,
+                            anchor="w", height=45,
+                            font=ctk.CTkFont(size=15, weight="bold"),
                             command=lambda: self.show_page(key))
-        btn.pack(padx=0, pady=2, fill="x")
+        btn.pack(padx=15, pady=6, fill="x")
         self.buttons[key] = btn
 
-    # updated show_page with highlight
     def show_page(self, key):
         for p in self.pages.values():
             p.pack_forget()
@@ -255,10 +285,8 @@ class StudentApp(ctk.CTk):
         if hasattr(self.pages[key], "refresh"):
             self.pages[key].refresh()
 
-        # reset all buttons
         for k, b in self.buttons.items():
             b.configure(fg_color="#273b7a")
-        # highlight active
         if key in self.buttons:
             self.buttons[key].configure(fg_color="#1e2f5a")
         self.active_page = key
@@ -274,7 +302,7 @@ class StudentApp(ctk.CTk):
         return "N/A"
 
 
-# ---------------- Testing ----------------
+# ---------------- Run ----------------
 if __name__ == "__main__":
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")

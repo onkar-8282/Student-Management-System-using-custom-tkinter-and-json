@@ -2,8 +2,6 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 import json, os
 
-
-
 def create_add_student_page(root, go_back):
     bg_color = '#273b7a'
     branch_list = ['CO', 'IT', 'EE', 'ME', 'CE', 'ET']
@@ -94,9 +92,6 @@ def create_add_student_page(root, go_back):
         if "@" not in email or "." not in email:
             messagebox.showerror("Error", "Invalid email format!")
             return
-
-        # Hash password for security
-        #hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         # Load existing data
         if os.path.exists("admin.json"):

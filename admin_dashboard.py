@@ -2,6 +2,8 @@ import tkinter as tk
 import customtkinter as ctk
 from tkinter import ttk, messagebox, filedialog
 import json, os
+from datetime import datetime  # ✅ for timestamps
+from tkinter import font as tkfont   # ✅ for styling
 
 FILE = "admin.json"
 
@@ -10,7 +12,8 @@ DEFAULT_DB = {
     "admin": {"first_name": "Admin", "last_name": "User", "password": ""},
     "students": [],
     "courses": [],
-    "leave_student": [],    # {id, student_id, reason, status: -1/0/1}
+    "leave_student": [],
+    "notifications": []
 }
 
 
@@ -162,7 +165,6 @@ class ListPage(BasePage):
         cur = self.tree.focus()
         if not cur:
             return None
-        # Treeview iid is set to the item's id (string). Look up matching item in items().
         try:
             sel_id = int(cur)
         except Exception:
@@ -173,7 +175,6 @@ class ListPage(BasePage):
         return None
 
     def refresh(self):
-        # Clear tree
         try:
             self.tree.delete(*self.tree.get_children())
         except Exception:
@@ -181,12 +182,10 @@ class ListPage(BasePage):
 
         for it in self.items():
             values = self.to_row(it)
-            # use the object's id as the iid so we can look it up later
             iid = str(it.get("id"))
             try:
                 self.tree.insert("", tk.END, iid=iid, values=values)
             except Exception:
-                # fallback: insert without iid
                 self.tree.insert("", tk.END, values=values)
 
 
@@ -198,8 +197,8 @@ class DashboardPage(BasePage):
         wrap.pack(fill=tk.BOTH, expand=True, padx=16, pady=16)
 
         ttk.Label(wrap, text="Administrative Dashboard", font=("Segoe UI", 30, "bold")).pack(anchor=tk.W)
-        self.stats_lbl = ttk.Label(wrap, font=("Segoe UI", 18))
-        self.stats_lbl.pack(anchor=tk.W, pady=(8, 16))
+        self.stats_lbl = ttk.Frame(wrap)
+        self.stats_lbl.pack(fill="x", pady=(8, 16))
 
         grid = ttk.Frame(wrap)
         grid.pack(fill=tk.X)
@@ -208,6 +207,7 @@ class DashboardPage(BasePage):
             ("Manage Courses", lambda: app.show_page("courses")),
             ("Leaves", lambda: app.show_page("leaves")),
             ("Admin Profile", lambda: app.show_page("profile")),
+            ("Notifications", lambda: app.show_page("notifications")),
         ]
         for i, (text, cmd) in enumerate(buttons):
             b = ttk.Button(grid, text=text, command=cmd)
@@ -218,14 +218,20 @@ class DashboardPage(BasePage):
         self.refresh()
 
     def refresh(self):
+        for widget in self.stats_lbl.winfo_children():
+            widget.destroy()
         d = self.app.data
-        lines = [
-            f"Total Students: {len(d['students'])}",
-            f"Total Courses: {len(d['courses'])}",
-            f"Total Number of Students who have applied for Leave: {len(d['leave_student'])}",
+        stats = [
+            ("Students", len(d["students"])),
+            ("Courses", len(d["courses"])),
+            ("Leaves", len(d["leave_student"])),
         ]
-        self.stats_lbl.config(text="\n".join(lines))
-
+        for i, (label, val) in enumerate(stats):
+            card = ctk.CTkFrame(self.stats_lbl, corner_radius=12, fg_color="#f5f5f5")
+            card.grid(row=0, column=i, padx=12, pady=8, sticky="nsew")
+            ctk.CTkLabel(card, text=label, font=("Segoe UI", 14, "bold")).pack(pady=(10,0))
+            ctk.CTkLabel(card, text=str(val), font=("Segoe UI", 22, "bold"), text_color="#273b7a").pack(pady=(4,10))
+        self.stats_lbl.columnconfigure((0,1,2), weight=1)
 
 # ---- Courses ----
 class CoursePage(ListPage):
@@ -298,6 +304,8 @@ class StudentPage(ListPage):
             new = {
                 "id": next_id(self.app.data["students"]),
                 "first_name": r_fn.get(), "last_name": r_ln.get(),
+                "email": r_mail.get(),
+                "gender": r_gender.get(),
                 "course_id": self.app.get_course_id_by_name(r_course.get()),
             }
             self.app.data["students"].append(new); save_json(self.app.data)
@@ -358,7 +366,74 @@ class LeavePage(BasePage):
         if not cur: return
         lid = int(self.student_tree.item(cur, "values")[0])
         lv = next((l for l in self.app.data["leave_student"] if l.get("id") == lid), None)
-        if lv: lv["status"] = s; save_json(self.app.data); self.refresh()
+        if lv:
+            lv["status"] = s
+            # --- Generate Notification with timestamp ---
+            student_name = self.app.get_student_name(lv.get("student_id"))
+            status_text = "approved" if s == 1 else "rejected"
+            note = {
+                "id": next_id(self.app.data["notifications"]),
+                "message": f"Leave request for {student_name} has been {status_text}.",
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "read": False
+            }
+            self.app.data["notifications"].append(note)
+            save_json(self.app.data)
+            self.refresh()
+            if "notifications" in self.app.pages:
+                self.app.pages["notifications"].refresh()
+
+# ---- Notifications ----
+class NotificationPage(ListPage):
+    TITLE = "Notifications"
+    COLUMNS = [
+        ("message", "Message", 420),
+        ("time", "Time", 180),
+    ]
+
+    def items(self):
+        return self.app.data["notifications"]
+
+    def to_row(self, it):
+        return (
+            it.get("message"),
+            it.get("time"),
+        )
+
+    def add_dialog(self):
+        win = tk.Toplevel(self)
+        win.title("Add Notification")
+        r_msg = FormRow(win, "Message:")
+        r_msg.pack(fill=tk.X, padx=12, pady=6)
+
+        def save():
+            msg = r_msg.get()
+            if not msg:
+                self.toast("Enter a message", "error"); return
+            new = {
+                "message": msg,
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            self.app.data["notifications"].append(new)
+            save_json(self.app.data)
+            win.destroy(); self.refresh()
+        ttk.Button(win, text="Save", command=save).pack(pady=8)
+
+    def _edit_dialog(self, item):
+        win = tk.Toplevel(self)
+        win.title("Edit Notification")
+        r_msg = FormRow(win, "Message:"); r_msg.set(item.get("message"))
+        r_msg.pack(fill=tk.X, padx=12, pady=6)
+
+        def save():
+            item["message"] = r_msg.get() or item["message"]
+            item["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   # update timestamp on edit
+            save_json(self.app.data); win.destroy(); self.refresh()
+        ttk.Button(win, text="Update", command=save).pack(pady=8)
+
+    def _delete(self, item):
+        self.app.data["notifications"] = [n for n in self.app.data["notifications"] if n["id"] != item["id"]]
+
 
 # ---- Admin Profile ----
 class ProfilePage(BasePage):
@@ -407,28 +482,25 @@ class AdminApp(ctk.CTk):
         self.main = ctk.CTkFrame(self, fg_color="white", corner_radius=0)
         self.main.pack(side="right", fill="both", expand=True)
 
-        # --- Sidebar ---
+        # --- Sidebar header ---
         ctk.CTkLabel(
             self.sidebar,
-            text="Menu",
-            font=("Segoe UI", 16, "bold"),
+            text="🎓 Admin Panel",
+            font=("Segoe UI", 22, "bold"),
             text_color="white"
-        ).pack(padx=12, pady=(12,6))
+        ).pack(padx=12, pady=(20,16))
 
-        self.sidebar_buttons = {}  # store buttons for highlight
+        self.sidebar_buttons = {}
 
         self.sidebar_buttons["dashboard"] = self._btn("Dashboard", lambda: self.show_page("dashboard"))
         self.sidebar_buttons["students"] = self._btn("Students", lambda: self.show_page("students"))
         self.sidebar_buttons["courses"] = self._btn("Courses", lambda: self.show_page("courses"))
         self.sidebar_buttons["leaves"] = self._btn("Leaves", lambda: self.show_page("leaves"))
+        self.sidebar_buttons["notifications"] = self._btn("Notifications", lambda: self.show_page("notifications"))
         self.sidebar_buttons["profile"] = self._btn("Admin Profile", lambda: self.show_page("profile"))
 
-        # Separator (thin line)
         ctk.CTkFrame(self.sidebar, height=2, fg_color="white").pack(fill="x", padx=12, pady=8)
 
-        self.sidebar_buttons["reload"] = self._btn("Reload DB", self.reload_db)
-
-        # --- Sidebar bottom (Log out) ---
         self.sidebar_bottom = ctk.CTkFrame(self.sidebar, fg_color="#273b7a")
         self.sidebar_bottom.pack(side="bottom", fill="x", pady=8)
 
@@ -436,8 +508,8 @@ class AdminApp(ctk.CTk):
             self.sidebar_bottom,
             text="Log Out",
             command=self.logout,
-            fg_color="#c62828",      # red background
-            hover_color="#e53935",   # brighter red on hover
+            fg_color="#c62828",
+            hover_color="#e53935",
             text_color="white",
             anchor="w"
         )
@@ -449,27 +521,33 @@ class AdminApp(ctk.CTk):
             "courses": CoursePage(self.main, self),
             "students": StudentPage(self.main, self),
             "leaves": LeavePage(self.main, self),
-            "profile": ProfilePage(self.main, self),
+            "notifications": NotificationPage(self.main, self),
+            "profile": ProfilePage(self.main, self)
         }
         for p in self.pages.values():
             p.pack_forget()
         self.show_page("dashboard")
 
-        # Style (kept for ttk parts if you use them elsewhere)
+        # Style for ttk widgets
         self.style = ttk.Style(self)
         try:
             self.style.theme_use("clam")
         except:
             pass
+        self.style.configure("Treeview", font=("Segoe UI", 11), rowheight=28,
+                             background="white", fieldbackground="white")
+        self.style.map("Treeview", background=[("selected", "#c5cae9")])
+        self.style.configure("Treeview.Heading", font=("Segoe UI", 11, "bold"),
+                             background="#394d9c", foreground="white")
 
-    # Sidebar button helper (customtkinter only)
+    # Sidebar button helper
     def _btn(self, text, command):
         btn = ctk.CTkButton(
             self.sidebar,
             text=text,
             command=command,
-            fg_color="#394d9c",    # normal button color
-            hover_color="#4a63c3", # hover effect
+            fg_color="#394d9c",
+            hover_color="#4a63c3",
             text_color="white",
             anchor="w"
         )
@@ -477,20 +555,16 @@ class AdminApp(ctk.CTk):
         return btn
 
     def show_page(self, key):
-        # hide all pages
         for k, p in self.pages.items():
             p.pack_forget()
-        # show selected page
         self.pages[key].pack(fill=tk.BOTH, expand=True)
         if hasattr(self.pages[key], 'refresh'):
             self.pages[key].refresh()
-
-        # update sidebar highlight
         for k, b in self.sidebar_buttons.items():
             if k == key:
-                b.configure(fg_color="#1a237e")  # active page color
+                b.configure(fg_color="#1a237e")
             elif k not in ("reload", "logout"):
-                b.configure(fg_color="#394d9c")  # reset others
+                b.configure(fg_color="#394d9c")
 
     def refresh_dashboard(self):
         self.pages["dashboard"].refresh()
@@ -502,13 +576,12 @@ class AdminApp(ctk.CTk):
                 p.refresh()
         self.toast("Database reloaded from file")
 
-    def logout(self):
+    def logout_with_login(self):
         from tkinter import messagebox
         if messagebox.askyesno("Confirm Logout", "Are you sure you want to log out?"):
             self.destroy()
-
             try:
-                login = LoginApp()   
+                login = LoginApp()
                 login.mainloop()
             except:
                 pass
@@ -521,7 +594,7 @@ class AdminApp(ctk.CTk):
         else:
             messagebox.showwarning("Notice", msg)
 
-    # ---- Lookup helpers ----
+    # Lookup helpers unchanged...
     def get_course_name(self, course_id):
         c = next((c for c in self.data["courses"] if c.get("id") == course_id), None)
         return c.get("name") if c else ""
@@ -543,6 +616,7 @@ class AdminApp(ctk.CTk):
             return int(disp.split("ID:")[-1].rstrip(")"))
         except:
             return None
+
     def logout(self):
         if messagebox.askyesno("Logout", "Are you sure you want to log out?"):
             self.destroy()
